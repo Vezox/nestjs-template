@@ -5,6 +5,7 @@ import { UsersModule } from '../users/users.module';
 import { LoggerMiddleware } from 'src/middlewares/logger';
 import { AuthModule } from '../auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
   imports: [
@@ -13,6 +14,19 @@ import { ConfigModule } from '@nestjs/config';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ['.env.development.local', '.env.development', '.env'],
+    }),
+    TypeOrmModule.forRoot({
+      type: 'postgres',
+      host: 'localhost',
+      port: 5432,
+      username: 'postgres',
+      password: '12345678',
+      database: 'cms',
+      migrationsTableName: 'migration',
+      migrations: ['src/migration/*.ts'],
+      ssl: false,
+      autoLoadEntities: true,
+      synchronize: true,
     }),
   ],
   controllers: [AppController],

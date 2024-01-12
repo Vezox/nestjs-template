@@ -5,31 +5,28 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
+  Index,
+  ManyToOne,
 } from 'typeorm';
-import { Role } from './enum/role.enum';
+import { Role } from '../roles/role.entity';
 
 @Entity()
 export class User {
   @PrimaryGeneratedColumn('uuid')
+  @Index('user_id_index')
   id: string;
 
   @Column()
-  username: string;
+  name: string;
 
   @Column({ unique: true })
   email: string;
 
+  @ManyToOne(() => Role, (role) => role.users)
+  role: Role;
+
   @Column()
   hash: string;
-
-  @Column()
-  salt: string;
-
-  @Column({ default: true })
-  is_active: boolean;
-
-  @Column({ type: 'enum', enum: Role, array: true, default: ['user'] })
-  roles: Role[];
 
   @CreateDateColumn()
   created_at: Date;

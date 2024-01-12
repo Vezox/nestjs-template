@@ -1,22 +1,27 @@
 import { Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
-import { CreateUserDto } from './dto/create-user.dto';
-import { User } from './user.entity';
+// import { CreateUserDto } from './dto';
+import { User } from './users.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { AuthService } from '../auth/auth.service';
+import { Role } from '../roles/role.entity';
+import { Permission } from '../permissions/permission.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
-    private readonly authService: AuthService,
+    @InjectRepository(Role)
+    private readonly rolesRepository: Repository<Role>,
+    @InjectRepository(Permission)
+    private readonly permissionsRepository: Repository<Permission>,
   ) {}
 
-  create(createUserDto: CreateUserDto) {
+  create(createUserDto: any) {
     const user = new User();
-    user.username = createUserDto.username;
     user.email = createUserDto.email;
+    user.hash = createUserDto.hash;
+    user.role = createUserDto.role;
     return this.usersRepository.save(user);
   }
 
@@ -24,8 +29,13 @@ export class UsersService {
     return this.usersRepository.find();
   }
 
-  findOne(id: string) {
-    return this.usersRepository.findOneBy({ id: id });
+  async findOne(conditions: object) {
+    const user = await this.usersRepository.findOneBy(conditions);
+    const permissions = await this.permissionsRepository.find({
+      where: { roles: user.role },
+    });
+    user.role.permissions = permissions;
+    return user;
   }
 
   async remove(id: string): Promise<void> {

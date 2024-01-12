@@ -2,32 +2,31 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from '../users/users.module';
-import { LoggerMiddleware } from 'src/middlewares/logger';
+import { LoggerMiddleware } from 'src/middlewares/logger/request';
 import { AuthModule } from '../auth/auth.module';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import typeorm from 'src/configs/typeorm';
+import { config } from 'dotenv';
+import { PermissionsModule } from '../permissions/permissions.module';
+
+config();
 
 @Module({
   imports: [
-    UsersModule,
-    AuthModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ['.env.development.local', '.env.development', '.env'],
+      load: [typeorm],
     }),
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'postgres',
-      password: '12345678',
-      database: 'cms',
-      migrationsTableName: 'migration',
-      migrations: ['src/migration/*.ts'],
-      ssl: false,
-      autoLoadEntities: true,
-      synchronize: true,
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) =>
+        configService.get('typeorm'),
     }),
+    UsersModule,
+    AuthModule,
+    PermissionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

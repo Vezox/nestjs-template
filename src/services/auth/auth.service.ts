@@ -1,7 +1,8 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
-import CryptoJS from 'crypto-js';
+import * as bcrypt from 'bcrypt';
+import { CreateUserDto } from './dto';
 
 @Injectable()
 export class AuthService {
@@ -10,53 +11,49 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async signIn(username: string, password: string) {
-    const user = await this.usersService.findOne(username);
-    if (!this.validPassword(password, user.salt, user.hash)) {
-      throw new UnauthorizedException();
+  async createUser(user_data: CreateUserDto) {
+    const existing_user = await this.usersService.findOne({
+      email: user_data.email,
+    });
+    if (existing_user) {
+      throw new UnauthorizedException('User already exists');
+    }
+    const hash = await this.hashPassword(user_data.password);
+    const user = await this.usersService.create({
+      ...user_data,
+      hash: hash,
+    });
+    delete user.hash;
+    return user;
+  }
+
+  async signIn(email: string, password: string) {
+    const user = await this.usersService.findOne({ email });
+    if (!this.comparePassword(password, user.hash)) {
+      throw new UnauthorizedException('password is incorrect');
     }
     const payload = {
       id: user.id,
-      username: user.username,
-      roles: user.roles,
+      role: user.role,
       email: user.email,
     };
+    return this.generateAccessToken(payload);
+  }
+
+  generateAccessToken(payload: object) {
     return {
-      access_token: await this.jwtService.signAsync(payload),
+      access_token: this.jwtService.sign(payload),
+      refresh_token: this.jwtService.sign(payload, {
+        expiresIn: '7d',
+      }),
     };
   }
 
-  generateSalt() {
-    return CryptoJS.lib.WordArray.random(16);
+  hashPassword(password: string, salt_or_rounds: string | number = 10) {
+    return bcrypt.hash(password, salt_or_rounds);
   }
 
-  hashPassword(password: string, salt: string) {
-    return CryptoJS.PBKDF2(password, salt, {
-      keySize: 512 / 32,
-      iterations: 1000,
-    }).toString();
-  }
-
-  validPassword = function (password: string, salt: string, hash: string) {
-    return this.hashPassword(password, salt) === hash;
-  };
-
-  async createUser(userData: any) {
-    const salt = this.generateSalt();
-    const hash = this.hashPassword(userData.password, salt);
-    const user = await this.usersService.create({
-      ...userData,
-      salt: salt.toString(),
-      hash: hash,
-    });
-    const payload = {
-      id: user.id,
-      username: user.username,
-      roles: user.roles,
-      email: user.email,
-    };
-    return {
-      access_token: await this.jwtService.signAsync(payload),
-    };
+  comparePassword(password: string, hash: string) {
+    return bcrypt.compare(password, hash);
   }
 }

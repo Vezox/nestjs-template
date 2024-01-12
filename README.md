@@ -71,3 +71,18 @@ nest g module module-name
 nest g controller controller-name
 ```
 
+## Swagger
+
+```bash
+# swagger
+http://localhost:3000/api
+```
+
+## Migration
+
+```bash
+
+npm run migration:create --name=migration-name
+
+npm run migration:run
+

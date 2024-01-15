@@ -3,12 +3,16 @@ import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto';
+import { PermissionsService } from '../permissions/permissions.service';
+import { RolesService } from '../roles/roles.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
+    private rolesService: RolesService,
+    private permissionsService: PermissionsService,
   ) {}
 
   async createUser(user_data: CreateUserDto) {
@@ -18,10 +22,17 @@ export class AuthService {
     if (existing_user) {
       throw new UnauthorizedException('User already exists');
     }
+    const role = await this.rolesService.findById(user_data.role_id);
+    console.log(role);
+    if (!role) {
+      throw new UnauthorizedException('Role not found');
+    }
     const hash = await this.hashPassword(user_data.password);
     const user = await this.usersService.create({
-      ...user_data,
-      hash: hash,
+      name: user_data.name,
+      email: user_data.email,
+      hash,
+      role,
     });
     delete user.hash;
     return user;

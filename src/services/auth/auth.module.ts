@@ -8,6 +8,8 @@ import { AuthGuard } from './guards/auth.guard';
 import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './guards/role.guard';
 import { PermissionGuard } from './guards/permission.guard';
+import { RolesModule } from '../roles/roles.module';
+import { PermissionsModule } from '../permissions/permissions.module';
 
 @Module({
   imports: [
@@ -17,6 +19,8 @@ import { PermissionGuard } from './guards/permission.guard';
       secret: jwtConstants.secret,
       signOptions: { expiresIn: jwtConstants.expires_in },
     }),
+    RolesModule,
+    PermissionsModule,
   ],
   providers: [
     AuthService,

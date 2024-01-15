@@ -19,6 +19,7 @@ export class UsersService {
 
   create(createUserDto: any) {
     const user = new User();
+    user.name = createUserDto.name;
     user.email = createUserDto.email;
     user.hash = createUserDto.hash;
     user.role = createUserDto.role;
@@ -29,24 +30,25 @@ export class UsersService {
     return this.usersRepository.find();
   }
 
-  async findOne(conditions: object) {
-    const user = await this.usersRepository.findOneBy(conditions);
-    const permissions = await this.permissionsRepository.find({
-      where: { roles: user.role },
-    });
-    user.role.permissions = permissions;
-    return user;
-  }
-
-  async remove(id: string): Promise<void> {
-    await this.usersRepository.delete(id);
+  findOne(conditions: object) {
+    return this.usersRepository.findOneBy(conditions);
   }
 
   async findById(id: string) {
-    return {
-      name: 'John Doe',
-      email: '',
-      id,
-    };
+    return this.usersRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.role', 'role')
+      .leftJoinAndSelect('role.permissions', 'permissions')
+      .select([
+        'user.id',
+        'user.name',
+        'user.email',
+        'role.id',
+        'role.name',
+        'permissions.id',
+        'permissions.name',
+      ])
+      .where('user.id = :id', { id: id })
+      .getOne();
   }
 }

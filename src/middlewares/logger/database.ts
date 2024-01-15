@@ -11,16 +11,16 @@ export class MyCustomLogger extends AbstractLogger {
         case 'log':
         case 'schema-build':
         case 'migration':
-          console.log(message.message);
+          // console.log(message.message);
           break;
 
         case 'info':
         case 'query':
-          if (message.prefix) {
-            console.info(message.prefix, message.message);
-          } else {
-            console.info(message.message);
-          }
+          // if (message.prefix) {
+          //   console.info(message.prefix, message.message);
+          // } else {
+          //   console.info(message.message);
+          // }
           break;
 
         case 'warn':

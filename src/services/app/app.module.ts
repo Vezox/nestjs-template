@@ -9,6 +9,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import typeorm from 'src/configs/typeorm';
 import { config } from 'dotenv';
 import { PermissionsModule } from '../permissions/permissions.module';
+import { RolesModule } from '../roles/roles.module';
 
 config();
 
@@ -27,6 +28,7 @@ config();
     UsersModule,
     AuthModule,
     PermissionsModule,
+    RolesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

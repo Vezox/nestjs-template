@@ -8,13 +8,14 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('create-user')
+  @Public()
   async create(@Body() userData: CreateUserDto) {
     const data = await this.authService.createUser(userData);
     return data;
   }
 
   @Post('sign-in')
-  @Public(true)
+  @Public()
   async signIn(@Body() signInDto: SignInDto) {
     const data = await this.authService.signIn(
       signInDto.email,

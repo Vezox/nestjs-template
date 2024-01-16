@@ -29,7 +29,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     }
 
     const responseBody = {
-      statusCode: httpStatus,
+      status_code: httpStatus,
       timestamp: new Date().toISOString(),
       path: httpAdapter.getRequestUrl(ctx.getRequest()),
       message: res.message,

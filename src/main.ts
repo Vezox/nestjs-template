@@ -1,10 +1,10 @@
-import { NestFactory } from '@nestjs/core';
+import { HttpAdapterHost, NestFactory } from '@nestjs/core';
 // import * as csurf from 'csurf';
 import { AppModule } from './services/app/app.module';
 import { ValidationPipe } from '@nestjs/common';
 import * as session from 'express-session';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { HttpExceptionFilter } from './common/filter/http-exception.filter';
+import { AllExceptionsFilter } from './common/filter/all-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -21,7 +21,10 @@ async function bootstrap() {
   );
   // app.use(csurf());
   app.useGlobalPipes(new ValidationPipe());
-  app.useGlobalFilters(new HttpExceptionFilter());
+
+  const httpAdapterHost = app.get(HttpAdapterHost);
+  app.useGlobalFilters(new AllExceptionsFilter(httpAdapterHost));
+
   const options = new DocumentBuilder()
     .setTitle('cms')
     .setDescription('cms API description')
@@ -30,6 +33,7 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup('/docs', app, document);
+
   await app.listen(process.env.PORT);
 }
 bootstrap();

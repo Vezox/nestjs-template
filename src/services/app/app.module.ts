@@ -10,6 +10,8 @@ import typeorm from 'src/configs/typeorm';
 import { config } from 'dotenv';
 import { PermissionsModule } from '../permissions/permissions.module';
 import { RolesModule } from '../roles/roles.module';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { TransformInterceptor } from 'src/common/intercepter/transform.intercepter';
 
 config();
 
@@ -31,7 +33,13 @@ config();
     RolesModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TransformInterceptor,
+    },
+    AppService,
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

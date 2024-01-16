@@ -2,18 +2,15 @@ import {
   Entity,
   Column,
   PrimaryGeneratedColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-  DeleteDateColumn,
-  Index,
-  ManyToOne,
+  ManyToMany,
+  JoinTable,
 } from 'typeorm';
 import { Role } from '../roles/role.entity';
+import { BaseEntity } from 'src/common/entity/base';
 
 @Entity()
-export class User {
+export class User extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
-  @Index('user_id_index')
   id: string;
 
   @Column()
@@ -22,18 +19,10 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @ManyToOne(() => Role, (role) => role.users)
-  role: Role;
+  @ManyToMany(() => Role)
+  @JoinTable()
+  roles: Role[];
 
   @Column()
   hash: string;
-
-  @CreateDateColumn()
-  created_at: Date;
-
-  @UpdateDateColumn()
-  updated_at: Date;
-
-  @DeleteDateColumn()
-  deleted_at: Date;
 }

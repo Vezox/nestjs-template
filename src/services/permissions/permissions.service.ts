@@ -14,12 +14,13 @@ export class PermissionsService {
 
   async create(createUserDto: CreatePermissionDto) {
     const permission = new Permission();
-    permission.name = createUserDto.name;
+    permission.key = createUserDto.key;
+    permission.description = createUserDto.description;
     return this.permissionRepository.save(permission);
   }
 
-  async isExist(name: string) {
-    const permission = await this.permissionRepository.findOneBy({ name });
+  async isExist(key: string) {
+    const permission = await this.permissionRepository.findOneBy({ key });
     return !!permission;
   }
 
@@ -28,14 +29,14 @@ export class PermissionsService {
   }
 
   async getList(getListDto: GetListDto) {
-    const conditions = { name: Like(`%${getListDto.search}%`) };
+    const conditions = { key: Like(`%${getListDto.search}%`) };
     if (getListDto.start_time && getListDto.end_time) {
       conditions['created_at'] = Between(
         new Date(getListDto.start_time),
         new Date(getListDto.end_time),
       );
     }
-    const [data, total] = await this.permissionRepository.findAndCount({
+    const [rows, total] = await this.permissionRepository.findAndCount({
       where: conditions,
       take: getListDto.limit,
       skip: (getListDto.page - 1) * getListDto.limit,
@@ -43,6 +44,12 @@ export class PermissionsService {
         [getListDto.sort]: getListDto.order,
       },
     });
-    return { data, total };
+    return {
+      rows,
+      total,
+      total_page: Math.ceil(total / getListDto.limit),
+      page: getListDto.page,
+      limit: getListDto.limit,
+    };
   }
 }

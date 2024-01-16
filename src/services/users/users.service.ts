@@ -22,7 +22,7 @@ export class UsersService {
     user.name = createUserDto.name;
     user.email = createUserDto.email;
     user.hash = createUserDto.hash;
-    user.role = createUserDto.role;
+    user.roles = createUserDto.roles;
     return this.usersRepository.save(user);
   }
 
@@ -37,16 +37,17 @@ export class UsersService {
   async findById(id: string) {
     return this.usersRepository
       .createQueryBuilder('user')
-      .leftJoinAndSelect('user.role', 'role')
-      .leftJoinAndSelect('role.permissions', 'permissions')
+      .leftJoinAndSelect('user.roles', 'roles')
+      .leftJoinAndSelect('roles.permissions', 'permissions')
       .select([
         'user.id',
         'user.name',
         'user.email',
-        'role.id',
-        'role.name',
+        'roles.id',
+        'roles.name',
         'permissions.id',
-        'permissions.name',
+        'permissions.key',
+        'permissions.description',
       ])
       .where('user.id = :id', { id: id })
       .getOne();

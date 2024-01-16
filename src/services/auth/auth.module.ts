@@ -6,7 +6,6 @@ import { jwtConstants } from './constants';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthGuard } from './guards/auth.guard';
 import { APP_GUARD } from '@nestjs/core';
-import { RolesGuard } from './guards/role.guard';
 import { PermissionGuard } from './guards/permission.guard';
 import { RolesModule } from '../roles/roles.module';
 import { PermissionsModule } from '../permissions/permissions.module';
@@ -27,10 +26,6 @@ import { PermissionsModule } from '../permissions/permissions.module';
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: RolesGuard,
     },
     {
       provide: APP_GUARD,

@@ -1,38 +1,13 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-  DeleteDateColumn,
-  ManyToMany,
-  JoinTable,
-  OneToMany,
-} from 'typeorm';
+import { Entity, Column, ManyToMany, JoinTable } from 'typeorm';
 import { Permission } from '../permissions/permission.entity';
-import { User } from '../users/users.entity';
+import { BaseEntity } from 'src/common/entity/base';
 
 @Entity()
-export class Role {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
+export class Role extends BaseEntity {
   @Column()
   name: string;
 
-  @ManyToMany(() => Permission, (permission) => permission.roles)
+  @ManyToMany(() => Permission)
   @JoinTable()
   permissions: Permission[];
-
-  @OneToMany(() => User, (user) => user.role)
-  users: User[];
-
-  @CreateDateColumn()
-  created_at: Date;
-
-  @UpdateDateColumn()
-  updated_at: Date;
-
-  @DeleteDateColumn()
-  deleted_at: Date;
 }

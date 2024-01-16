@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { PermissionsService } from './permissions.service';
 import { CreatePermissionDto } from './dto';
 import { Public } from '../auth/decorators/public.decorator';
@@ -11,7 +19,7 @@ export class PermissionsController {
   @Post('create')
   @Public()
   async create(@Body() permissionData: CreatePermissionDto) {
-    const is_exist = await this.permissionService.isExist(permissionData.name);
+    const is_exist = await this.permissionService.isExist(permissionData.key);
     if (is_exist) {
       throw new Error('Permission name already exist');
     }
@@ -21,6 +29,7 @@ export class PermissionsController {
 
   @Get('all')
   @Public()
+  @HttpCode(HttpStatus.OK)
   async all(@Query() getListDto: GetListDto) {
     const data = await this.permissionService.getList(getListDto);
     return data;

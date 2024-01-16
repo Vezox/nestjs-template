@@ -1,4 +1,9 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -20,19 +25,18 @@ export class AuthService {
       email: user_data.email,
     });
     if (existing_user) {
-      throw new UnauthorizedException('User already exists');
+      throw new HttpException('Email exists', HttpStatus.CONFLICT);
     }
-    const role = await this.rolesService.findById(user_data.role_id);
-    console.log(role);
-    if (!role) {
-      throw new UnauthorizedException('Role not found');
+    const roles = await this.rolesService.findByIds(user_data.role_ids);
+    if (!roles.length) {
+      throw new HttpException('Role not found', HttpStatus.NOT_FOUND);
     }
     const hash = await this.hashPassword(user_data.password);
     const user = await this.usersService.create({
       name: user_data.name,
       email: user_data.email,
       hash,
-      role,
+      roles,
     });
     delete user.hash;
     return user;
@@ -40,15 +44,19 @@ export class AuthService {
 
   async signIn(email: string, password: string) {
     const user = await this.usersService.findOne({ email });
-    if (!this.comparePassword(password, user.hash)) {
+    const check_password = await this.comparePassword(password, user.hash);
+    if (!check_password) {
       throw new UnauthorizedException('password is incorrect');
     }
     const payload = {
       id: user.id,
-      role: user.role,
       email: user.email,
     };
-    return this.generateAccessToken(payload);
+    const token = this.generateAccessToken(payload);
+    return {
+      user: payload,
+      token,
+    };
   }
 
   generateAccessToken(payload: object) {

@@ -1,20 +1,24 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, HttpCode, HttpStatus, Param } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { Public } from '../auth/decorators/public.decorator';
-// import { User } from './user.entity';
+import { Permission } from '../auth/decorators/permission.decorator';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly userService: UsersService) {}
 
   @Get(':id')
-  @Public()
+  @Permission('user.read')
+  @HttpCode(HttpStatus.OK)
   getUserDetails(@Param() params: { id: string }) {
-    return this.userService.findById(params.id);
+    const data = this.userService.findById(params.id);
+    return data;
   }
 
   @Get('list')
-  getUsers() {
-    return this.userService.findAll();
+  @Permission('user.read')
+  @HttpCode(HttpStatus.OK)
+  async getUsers() {
+    const data = await this.userService.findAll();
+    return data;
   }
 }

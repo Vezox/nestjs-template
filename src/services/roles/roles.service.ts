@@ -32,7 +32,7 @@ export class RolesService {
         new Date(getListDto.end_time),
       );
     }
-    const [data, total] = await this.roleRepository.findAndCount({
+    const [rows, total] = await this.roleRepository.findAndCount({
       where: conditions,
       take: getListDto.limit,
       skip: (getListDto.page - 1) * getListDto.limit,
@@ -40,16 +40,43 @@ export class RolesService {
         [getListDto.sort]: getListDto.order,
       },
     });
-    return { data, total };
+    return {
+      rows,
+      total,
+      total_page: Math.ceil(total / getListDto.limit),
+      page: getListDto.page,
+      limit: getListDto.limit,
+    };
   }
 
   findById(id: string) {
     return this.roleRepository
       .createQueryBuilder('role')
       .leftJoinAndSelect('role.permissions', 'permissions')
-      .select(['role.id', 'role.name', 'permissions.id', 'permissions.name'])
+      .select([
+        'role.id',
+        'role.name',
+        'permissions.id',
+        'permissions.key',
+        'permissions.description',
+      ])
       .where('role.id = :id', { id: id })
       .getOne();
+  }
+
+  findByIds(ids: string[]) {
+    return this.roleRepository
+      .createQueryBuilder('role')
+      .leftJoinAndSelect('role.permissions', 'permissions')
+      .select([
+        'role.id',
+        'role.name',
+        'permissions.id',
+        'permissions.key',
+        'permissions.description',
+      ])
+      .where('role.id IN (:...ids)', { ids })
+      .getMany();
   }
 
   async updatePermissions(role_id: string, permission_id: string[]) {

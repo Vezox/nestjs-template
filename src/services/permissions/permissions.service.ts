@@ -19,8 +19,13 @@ export class PermissionsService {
     return this.permissionRepository.save(permission);
   }
 
-  async isExist(key: string) {
+  async isExistByKey(key: string) {
     const permission = await this.permissionRepository.findOneBy({ key });
+    return !!permission;
+  }
+
+  async isExistById(id: string) {
+    const permission = await this.permissionRepository.findOneBy({ id });
     return !!permission;
   }
 
@@ -51,5 +56,9 @@ export class PermissionsService {
       page: getListDto.page,
       limit: getListDto.limit,
     };
+  }
+
+  softDelete(id: string) {
+    return this.permissionRepository.softDelete(id);
   }
 }

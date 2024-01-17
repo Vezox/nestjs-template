@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { Between, Like, Repository } from 'typeorm';
 // import { CreateUserDto } from './dto';
 import { User } from './users.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Role } from '../roles/role.entity';
 import { Permission } from '../permissions/permission.entity';
+import { GetListDto } from 'src/common/dto';
 
 @Injectable()
 export class UsersService {
@@ -26,8 +27,29 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
-  async findAll(): Promise<User[]> {
-    return this.usersRepository.find();
+  async getList(getListDto: GetListDto) {
+    const conditions = { name: Like(`%${getListDto.search}%`) };
+    if (getListDto.start_time && getListDto.end_time) {
+      conditions['created_at'] = Between(
+        new Date(getListDto.start_time),
+        new Date(getListDto.end_time),
+      );
+    }
+    const [rows, total] = await this.usersRepository.findAndCount({
+      where: conditions,
+      take: getListDto.limit,
+      skip: (getListDto.page - 1) * getListDto.limit,
+      order: {
+        [getListDto.sort]: getListDto.order,
+      },
+    });
+    return {
+      rows,
+      total,
+      total_page: Math.ceil(total / getListDto.limit),
+      page: getListDto.page,
+      limit: getListDto.limit,
+    };
   }
 
   findOne(conditions: object) {

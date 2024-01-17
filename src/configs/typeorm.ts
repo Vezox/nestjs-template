@@ -13,7 +13,6 @@ const config = {
   migrations: ['dist/migrations/*{.ts,.js}'],
   ssl: false,
   cli: {
-    entitiesDir: 'src/modules',
     migrationsDir: 'src/migrations',
   },
   autoLoadEntities: true,

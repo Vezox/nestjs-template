@@ -1,9 +1,12 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
+  HttpException,
   HttpStatus,
+  Param,
   Post,
   Query,
 } from '@nestjs/common';
@@ -19,19 +22,33 @@ export class PermissionsController {
   @Post('create')
   @Public()
   async create(@Body() permissionData: CreatePermissionDto) {
-    const is_exist = await this.permissionService.isExist(permissionData.key);
+    const is_exist = await this.permissionService.isExistByKey(
+      permissionData.key,
+    );
     if (is_exist) {
-      throw new Error('Permission name already exist');
+      throw new HttpException(
+        'Permission name already exist',
+        HttpStatus.BAD_REQUEST,
+      );
     }
-    const data = await this.permissionService.create(permissionData);
-    return data;
+    return await this.permissionService.create(permissionData);
+  }
+
+  @Delete('delete/:id')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  async delete(@Param('id') id: string) {
+    const is_exist = await this.permissionService.isExistById(id);
+    if (!is_exist) {
+      throw new HttpException('Permission not found', HttpStatus.BAD_REQUEST);
+    }
+    return await this.permissionService.softDelete(id);
   }
 
   @Get('all')
   @Public()
   @HttpCode(HttpStatus.OK)
   async all(@Query() getListDto: GetListDto) {
-    const data = await this.permissionService.getList(getListDto);
-    return data;
+    return await this.permissionService.getList(getListDto);
   }
 }

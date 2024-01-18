@@ -21,9 +21,7 @@ export class AuthService {
   ) {}
 
   async createUser(user_data: CreateUserDto) {
-    const existing_user = await this.usersService.findOne({
-      email: user_data.email,
-    });
+    const existing_user = await this.usersService.findByEmail(user_data.email);
     if (existing_user) {
       throw new HttpException('Email exists', HttpStatus.CONFLICT);
     }
@@ -43,7 +41,7 @@ export class AuthService {
   }
 
   async signIn(email: string, password: string) {
-    const user = await this.usersService.findOne({ email });
+    const user = await this.usersService.findByEmail(email);
     const check_password = await this.comparePassword(password, user.hash);
     if (!check_password) {
       throw new UnauthorizedException('password is incorrect');
@@ -52,14 +50,14 @@ export class AuthService {
       id: user.id,
       email: user.email,
     };
-    const token = this.generateAccessToken(payload);
+    const token = this.generateToken(payload);
     return {
       user: payload,
       token,
     };
   }
 
-  generateAccessToken(payload: object) {
+  generateToken(payload: object) {
     return {
       access_token: this.jwtService.sign(payload),
       refresh_token: this.jwtService.sign(payload, {

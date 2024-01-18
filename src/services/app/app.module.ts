@@ -7,13 +7,10 @@ import { AuthModule } from '../auth/auth.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import typeorm from 'src/configs/typeorm';
-import { config } from 'dotenv';
 import { PermissionsModule } from '../permissions/permissions.module';
 import { RolesModule } from '../roles/roles.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { TransformInterceptor } from 'src/common/intercepter/transform.intercepter';
-
-config();
 
 @Module({
   imports: [

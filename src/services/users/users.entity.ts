@@ -25,4 +25,7 @@ export class User extends BaseEntity {
 
   @Column()
   hash: string;
+
+  // @Column('string', { array: true })
+  // refresh_tokens: string[];
 }

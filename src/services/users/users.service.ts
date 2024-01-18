@@ -52,10 +52,6 @@ export class UsersService {
     };
   }
 
-  findOne(conditions: object) {
-    return this.usersRepository.findOneBy(conditions);
-  }
-
   async findById(id: string) {
     return this.usersRepository
       .createQueryBuilder('user')
@@ -73,5 +69,9 @@ export class UsersService {
       ])
       .where('user.id = :id', { id: id })
       .getOne();
+  }
+
+  findByEmail(email: string) {
+    return this.usersRepository.findOne({ where: { email } });
   }
 }

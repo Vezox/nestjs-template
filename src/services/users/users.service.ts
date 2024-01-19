@@ -74,4 +74,15 @@ export class UsersService {
   findByEmail(email: string) {
     return this.usersRepository.findOne({ where: { email } });
   }
+
+  updateRefreshToken(id: string, refresh_tokens: string[]) {
+    return this.usersRepository.update(id, { refresh_tokens });
+  }
+
+  getRefreshTokensById(id: string) {
+    return this.usersRepository.findOne({
+      select: ['refresh_tokens', 'id'],
+      where: { id },
+    });
+  }
 }

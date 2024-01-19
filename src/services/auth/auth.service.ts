@@ -1,7 +1,9 @@
 import {
+  ForbiddenException,
   HttpException,
   HttpStatus,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
@@ -40,6 +42,14 @@ export class AuthService {
     return user;
   }
 
+  hashPassword(password: string, salt_or_rounds: string | number = 10) {
+    return bcrypt.hash(password, salt_or_rounds);
+  }
+
+  comparePassword(password: string, hash: string) {
+    return bcrypt.compare(password, hash);
+  }
+
   async signIn(email: string, password: string) {
     const user = await this.usersService.findByEmail(email);
     const check_password = await this.comparePassword(password, user.hash);
@@ -49,8 +59,13 @@ export class AuthService {
     const payload = {
       id: user.id,
       email: user.email,
+      name: user.name,
     };
     const token = this.generateToken(payload);
+    await this.usersService.updateRefreshToken(
+      user.id,
+      user.refresh_tokens.concat(token.refresh_token),
+    );
     return {
       user: payload,
       token,
@@ -66,11 +81,67 @@ export class AuthService {
     };
   }
 
-  hashPassword(password: string, salt_or_rounds: string | number = 10) {
-    return bcrypt.hash(password, salt_or_rounds);
+  async signOut(refresh_token: string, user_id: string) {
+    const decode = await this.jwtService.decode(refresh_token);
+    if (!decode) {
+      throw new UnauthorizedException('refresh_token is invalid');
+    }
+    if (decode['id'] !== user_id) {
+      throw new ForbiddenException('you do not have permission');
+    }
+    const user = await this.usersService.getRefreshTokensById(user_id);
+    if (!user) {
+      throw new NotFoundException('user not found');
+    }
+    const refresh_tokens = this.removeRefreshTokenExpired(
+      user.refresh_tokens,
+      refresh_token,
+    );
+    await this.usersService.updateRefreshToken(user.id, refresh_tokens);
   }
 
-  comparePassword(password: string, hash: string) {
-    return bcrypt.compare(password, hash);
+  removeRefreshTokenExpired(refresh_tokens: string[], remove: string) {
+    const now = Date.now();
+    console.log(refresh_tokens);
+    return refresh_tokens.filter((refresh_token) => {
+      if (refresh_token === remove) {
+        return false;
+      }
+      const payload = this.jwtService.decode(refresh_token);
+      return payload['exp'] * 1000 > now;
+    });
+  }
+
+  async refreshToken(refresh_token: string) {
+    const payload = await this.jwtService
+      .verifyAsync(refresh_token)
+      .catch(() => {
+        throw new UnauthorizedException('refresh_token is invalid');
+      });
+    const user = await this.usersService.getRefreshTokensById(payload['id']);
+    if (!user) {
+      throw new NotFoundException('user not found');
+    }
+    if (!user.refresh_tokens.includes(refresh_token)) {
+      throw new UnauthorizedException('refresh_token is invalid');
+    }
+    const refresh_tokens = this.removeRefreshTokenExpired(
+      user.refresh_tokens,
+      refresh_token,
+    );
+    if (!refresh_tokens.length) {
+      throw new UnauthorizedException('refresh_token is expired');
+    }
+    delete payload['iat'];
+    delete payload['exp'];
+    const token = this.generateToken(payload);
+    await this.usersService.updateRefreshToken(
+      user.id,
+      refresh_tokens.concat(token.refresh_token),
+    );
+    return {
+      user: payload,
+      token,
+    };
   }
 }

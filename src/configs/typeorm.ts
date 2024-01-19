@@ -1,6 +1,6 @@
 import { registerAs } from '@nestjs/config';
 import { DataSource, DataSourceOptions } from 'typeorm';
-import { MyCustomLogger } from 'src/middlewares/logger/database';
+import { MyCustomLogger } from '../middlewares/logger/database';
 
 const config = {
   type: 'postgres',
@@ -16,7 +16,7 @@ const config = {
     migrationsDir: 'src/migrations',
   },
   autoLoadEntities: true,
-  synchronize: true,
+  synchronize: false,
   logging: true,
   logger: MyCustomLogger,
 };

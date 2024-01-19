@@ -27,12 +27,15 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (exception instanceof HttpException) {
       res = exception.getResponse() as any;
     }
+    if (!(exception instanceof HttpException)) {
+      console.error(exception);
+    }
 
     const responseBody = {
       status_code: httpStatus,
       path: httpAdapter.getRequestUrl(ctx.getRequest()),
-      message: res.message,
-      error: res.error,
+      message: res.message || res,
+      error: res.error || res,
     };
 
     httpAdapter.reply(ctx.getResponse(), responseBody, httpStatus);

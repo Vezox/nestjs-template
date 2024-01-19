@@ -5,6 +5,7 @@ import {
   ArrayMinSize,
   IsArray,
   IsUUID,
+  Matches,
 } from 'class-validator';
 
 export class CreateUserDto {
@@ -17,6 +18,9 @@ export class CreateUserDto {
 
   @IsNotEmpty()
   @MinLength(8)
+  @Matches(/^(?=.*\d)(?=.*[a-zA-z])[0-9A-Za-z\d@$!%*?&]{8,}$/, {
+    message: 'password containing at least 8 characters, 1 number and 1 letter',
+  })
   readonly password: string;
 
   @IsNotEmpty()

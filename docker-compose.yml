@@ -4,7 +4,7 @@ services:
   
   postgres:
     image: postgres:16.1
-    container_name: kafka-docker-postgres
+    container_name: solar-cms-postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -18,7 +18,7 @@ services:
   
   pgadmin:
     image: dpage/pgadmin4:7.8
-    container_name: kafka-docker-pgadmin
+    container_name: solar-cms-pgadmin
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
@@ -30,12 +30,53 @@ services:
     volumes:
        - pgadmin-volume:/var/lib/pgadmin
     restart: unless-stopped
+  
+  redis:
+    image: redis:7.2
+    container_name: solar-cms-redis
+    volumes:
+      - redis-volume:/data
+    ports:
+      - 6379:6379
+    networks:
+      - redis-network
+    healthcheck:
+      test: ["CMD", "redis-cli","ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  app:
+    tty: true
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - ${PORT}:${PORT}
+    environment:
+      - REDIS_URI=redis://redis:6379
+    env_file: .env
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - postgres-network
+      - redis-network
+    restart: unless-stopped
+    healthcheck:
+      test: wget --quiet --tries=1 --spider http://localhost:${PORT} || exit 1z
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
 networks:
   postgres-network:
+    driver: bridge
+  redis-network:
     driver: bridge
 
 volumes:
   postgres-volume:
   pgadmin-volume:
+  redis-volume:
   
